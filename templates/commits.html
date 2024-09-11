@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Commits par Minute</title>
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,20 +18,42 @@
         h1 {
             text-align: center;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f1f8e9;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Nombre de commits par minute</h1>
-    <div id="chart_div" style="width: 100%; height: 500px;"></div>
+    <table id="commits_table">
+        <thead>
+            <tr>
+                <th>Minute</th>
+                <th>Nombre de commits</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Les données seront insérées ici par le script -->
+        </tbody>
+    </table>
 </div>
 
 <script type="text/javascript">
-    google.charts.load('current', {packages: ['corechart']});
-    google.charts.setOnLoadCallback(drawChart);
-
-    function drawChart() {
+    document.addEventListener("DOMContentLoaded", function () {
         // Récupération des commits via l'API GitHub
         fetch('https://api.github.com/repos/Eliashnf/5MCSI_Metriques/commits')
             .then(response => response.json())
@@ -42,7 +63,7 @@
                 // Parcourir chaque commit et extraire la date
                 Promise.all(data.map(commitData => {
                     const commitDate = commitData.commit.author.date;
-                    
+
                     // Appel à l'API Flask pour extraire les minutes du commit
                     return fetch(`/extract-minutes/${encodeURIComponent(commitDate)}`)
                         .then(response => response.json())
@@ -57,28 +78,27 @@
                             }
                         });
                 })).then(() => {
-                    // Préparer les données pour le graphique
-                    const dataArray = [['Minute', 'Commits']];
+                    // Sélectionner le corps du tableau
+                    const tableBody = document.querySelector('#commits_table tbody');
+                    tableBody.innerHTML = '';  // Effacer tout contenu précédent
+
+                    // Insérer les données dans le tableau
                     for (const minute in commitsByMinute) {
-                        dataArray.push([minute, commitsByMinute[minute]]);
+                        const row = document.createElement('tr');
+                        const minuteCell = document.createElement('td');
+                        const commitsCell = document.createElement('td');
+
+                        minuteCell.textContent = minute;
+                        commitsCell.textContent = commitsByMinute[minute];
+
+                        row.appendChild(minuteCell);
+                        row.appendChild(commitsCell);
+                        tableBody.appendChild(row);
                     }
-
-                    var dataTable = google.visualization.arrayToDataTable(dataArray);
-
-                    var options = {
-                        title: 'Nombre de commits minute par minute',
-                        hAxis: {title: 'Minute', slantedText: true, slantedTextAngle: 45},
-                        vAxis: {title: 'Nombre de commits'},
-                        legend: {position: 'none'},
-                        backgroundColor: '#f1f8e9'
-                    };
-
-                    var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
-                    chart.draw(dataTable, options);
                 });
             })
             .catch(error => console.error('Erreur lors de la récupération des données :', error));
-    }
+    });
 </script>
 
 </body>
