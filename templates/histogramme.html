@@ -1,58 +1,50 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Histogramme des températures</title>
+    <title>Histogramme des Températures</title>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   </head>
   <body>
     <div id="chart_div"></div>
     <script>
-      // Chargement de Google Charts
+      // Chargement des packages nécessaires pour le graphique
       google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(drawChart);
+      google.charts.setOnLoadCallback(drawBackgroundColor);
 
-      function drawChart() {
-        // Récupération de données depuis l'API /tawarano/
+      // Fonction principale pour dessiner l'histogramme
+      function drawBackgroundColor() {
+        function drawChart(data) {
+          // Créer la table de données pour Google Charts
+          var dataTable = new google.visualization.DataTable();
+          dataTable.addColumn('string', 'Date');
+          dataTable.addColumn('number', 'Température');
+
+          // Remplir les données avec les températures de l'API
+          data.results.forEach(entry => {
+            var date = new Date(entry.Jour * 1000);
+            dataTable.addRow([date.toLocaleDateString(), entry.temp]);
+          });
+
+          // Configuration des options de l'histogramme
+          var options = {
+            title: 'Évolution des températures de la ville de Tawarano',
+            legend: { position: 'bottom' },
+            hAxis: { title: 'Date' },
+            vAxis: { title: 'Température (°C)' },
+            bar: { groupWidth: '85%' }, // Largeur des barres
+            colors: ['#1b9e77'], // Couleur des barres
+          };
+
+          // Création du graphique de type histogramme (ColumnChart)
+          var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+          chart.draw(dataTable, options);
+        }
+
+        // Récupérer les données depuis l'API '/tawarano/'
         fetch('/tawarano/')
           .then(response => response.json())
           .then(data => {
-            // Créer une DataTable pour l'histogramme
-            var dataTable = new google.visualization.DataTable();
-            
-            // Ajouter les colonnes
-            dataTable.addColumn('string', 'Date');
-            dataTable.addColumn('number', 'Température (°C)');
-            
-            // Ajouter les lignes en parcourant les résultats du JSON
-            data.results.forEach(entry => {
-              // Conversion de l'UNIX timestamp en une date lisible
-              var date = new Date(entry.Jour * 1000);
-              var formattedDate = date.toLocaleDateString();
-              
-              // Ajout des données (date et température) à la table
-              dataTable.addRow([formattedDate, entry.temp]);
-            });
-            
-            // Configuration des options de l'histogramme
-            var options = {
-              title: 'Histogramme des températures de la ville de Tawarano',
-              legend: { position: 'none' },
-              hAxis: {
-                title: 'Date'
-              },
-              vAxis: {
-                title: 'Température (°C)'
-              },
-              colors: ['#76A7FA'],
-              bar: { groupWidth: '75%' }
-            };
-
-            // Dessiner l'histogramme
-            var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
-            chart.draw(dataTable, options);
-          })
-          .catch(error => {
-            console.error('Erreur lors du chargement des données :', error);
+            drawChart(data);
           });
       }
     </script>
