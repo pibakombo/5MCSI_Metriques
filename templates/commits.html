@@ -34,7 +34,7 @@
 
     function drawChart() {
         // Récupération des commits via l'API GitHub
-        fetch('https://api.github.com/repos/Eliashnf/5MCSI_Metriques/commits')
+        fetch('https://api.github.com/repos/pibakombo/5MCSI_Metriques/commits')
             .then(response => response.json())
             .then(data => {
                 const commitsByMinute = {};
