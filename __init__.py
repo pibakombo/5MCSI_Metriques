@@ -23,6 +23,17 @@ def meteo():
         results.append({'Jour': dt_value, 'temp': temp_day_value})
     return jsonify(results=results)
 
+@app.route('/commits/')
+def commits():
+    response = urlopen('https://api.github.com/repos/pibakombo/5MCSI_Metriques/commits')
+    raw_content = response.read()
+    json_content = json.loads(raw_content.decode('utf-8'))
+    results = []
+    for list_element in json_content.get('list', []):
+        date = list_element.get('commit', {}).get('author', {}).get('date')
+        results.append({'Date': date})
+    return jsonify(results=results)
+
 @app.route("/rapport/")
 def mongraphique():
     return render_template("graphique.html")
